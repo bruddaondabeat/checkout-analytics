@@ -1,0 +1,173 @@
+version: 2
+
+models:
+  - name: stg_stripe__transactions
+    description: >
+      Cleaned and standardized Stripe balance transactions from the raw layer.
+      This staging model serves as the foundation for all payment analytics,
+      providing consistent column names, proper data types, and business-friendly
+      boolean flags for downstream analysis.
+
+      Grain: One row per transaction (unique on transaction_id)
+
+      Business Context:
+        Every payment that flows through Checkout.com's platform creates a
+        transaction record. This model standardizes that raw data so analysts
+        can easily calculate authorization rates, decline patterns, and revenue
+        metrics without wrestling with inconsistent naming or data types.
+
+    columns:
+      # Primary Key
+      - name: transaction_id
+        description: >
+          Unique identifier for each transaction (e.g., txn_00000001).
+          This is the primary key - every row must have a unique, non-null value.
+        tests:
+          - unique
+          - not_null
+
+      # Money Fields
+      - name: amount_cents
+        description: >
+          Transaction amount in cents (integer for precision).
+          Example: 15673 cents = $156.73
+          Use this for aggregations to avoid floating-point errors.
+        tests:
+          - not_null
+
+      - name: amount_usd
+        description: >
+          Transaction amount in dollars (decimal for readability).
+          Calculated as amount_cents / 100.0.
+          Example: $156.73
+          Use this for dashboards and reports.
+
+      - name: fee_cents
+        description: >
+          Processing fee charged by Stripe/Checkout.com in cents.
+          Typically 2.9% + 30¢ for card transactions.
+
+      - name: fee_usd
+        description: >
+          Processing fee in dollars (fee_cents / 100.0).
+
+      - name: net_cents
+        description: >
+          Net amount after fees in cents (amount_cents - fee_cents).
+          This is what the merchant actually receives.
+
+      - name: net_usd
+        description: >
+          Net amount in dollars (net_cents / 100.0).
+
+      - name: currency
+        description: >
+          Three-letter currency code (e.g., usd, eur, gbp).
+          ISO 4217 standard.
+
+      # Transaction Status
+      - name: status
+        description: >
+          Raw transaction status from Stripe.
+          - 'available': Funds settled and available to merchant
+          - 'pending': Transaction declined or awaiting settlement
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['available', 'pending']
+
+      - name: is_approved
+        description: >
+          Boolean flag indicating if transaction was approved by the issuing bank.
+          TRUE = approved (status = 'available')
+          FALSE = declined (status = 'pending')
+
+          This is the KEY metric for authorization rate calculations.
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+
+      - name: decline_reason
+        description: >
+          Reason for decline (NULL if approved).
+          Common values:
+            - insufficient_funds: Customer doesn't have enough money
+            - fraud_suspected: Flagged by fraud detection system
+            - invalid_card: Card number/CVV incorrect
+            - expired_card: Card past expiration date
+            - do_not_honor: Generic issuer decline
+            - card_velocity_exceeded: Too many transactions too quickly
+
+      # Transaction Classification
+      - name: transaction_type
+        description: >
+          Type of transaction flow.
+          Common values:
+            - charge: Initial payment authorization
+            - payment: Successful payment capture
+            - refund: Money returned to customer
+            - payment_refund: Refund of a previous payment
+
+      - name: is_refund
+        description: >
+          Boolean flag indicating if this is a refund transaction.
+          TRUE = refund or payment_refund
+          FALSE = charge or payment
+
+          Use this to exclude refunds from revenue calculations.
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+
+      - name: reporting_category
+        description: >
+          High-level categorization for reporting purposes.
+          Values: charge, payment, declined, refund
+
+      # Merchant Dimensions
+      - name: merchant_id
+        description: >
+          Unique identifier for the merchant (e.g., MERCH_T1_001).
+          Links to merchant dimension table (future).
+
+      - name: merchant_tier
+        description: >
+          Merchant size/volume tier.
+          - tier_1: Enterprise merchants (eBay, ASOS, Uber Eats)
+          - tier_2: Mid-market merchants
+          - tier_3: Small businesses
+        tests:
+          - accepted_values:
+              values: ['tier_1', 'tier_2', 'tier_3']
+
+      # Payment Method & Geography
+      - name: payment_method
+        description: >
+          Payment method used for the transaction.
+          Values: credit_card, debit_card, digital_wallet
+
+          Critical segmentation field for acceptance rate analysis
+          (e.g., "Are digital wallets converting better than cards?").
+
+      - name: customer_country
+        description: >
+          ISO 3166-1 alpha-2 country code of the customer (e.g., US, GB, FR).
+
+          Key dimension for geographic performance analysis
+          (e.g., "Why is our auth rate lower in France?").
+
+      # Timestamps
+      - name: created_at
+        description: >
+          Timestamp when the transaction was created (UTC).
+          Use this for time-series analysis and trend detection.
+        tests:
+          - not_null
+
+      - name: available_on_at
+        description: >
+          Timestamp when funds became available to the merchant (UTC).
+          NULL for declined transactions.
+          Typically T+2 to T+7 days after transaction for card payments.
