@@ -1,0 +1,25 @@
+# dbt artifacts - these are generated, not source code
+target/
+dbt_packages/
+logs/
+
+# Python virtual environment
+.venv/
+venv/
+*.pyc
+__pycache__/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+
+# IDE settings (optional - some teams commit .vscode/, some don't)
+# .vscode/
+
+# Environment variables (if you add any)
+.env
+profiles.yml
+
+# Snowflake session files (temporary query files)
+*.session.sql

@@ -1,0 +1,64 @@
+version: 2
+
+sources:
+  - name: stripe
+    description: >
+      Synthetic Stripe balance transaction data representing payment flows
+      for Tier 1-3 merchants. Generated based on official Stripe API schema
+      to simulate real-world payment authorization scenarios.
+    database: ANALYTICS
+    schema: RAW
+    tables:
+      - name: stripe_transactions
+        description: >
+          Transaction-level payment data including authorization status,
+          decline reasons, merchant attributes, and fees. Primary source
+          for calculating acceptance rate metrics.
+        columns:
+          - name: id
+            description: Unique transaction identifier (e.g., txn_00000001)
+            tests:
+              - unique
+              - not_null
+
+          - name: amount
+            description: Transaction amount in cents (USD, EUR, GBP depending on currency field)
+
+          - name: status
+            description: Transaction status (available = approved, pending = declined)
+
+          - name: decline_reason
+            description: Reason for decline (e.g., insufficient_funds, fraud_suspected, invalid_card)
+
+          - name: merchant_id
+            description: Merchant identifier (e.g., MERCH_T1_001)
+
+          - name: merchant_tier
+            description: Merchant tier (tier_1 = high volume, tier_2 = medium, tier_3 = small)
+
+          - name: payment_method
+            description: Payment method type (credit_card, debit_card, digital_wallet)
+
+          - name: customer_country
+            description: ISO country code (US, GB, FR, DE, AU)
+
+          - name: created
+            description: Transaction creation timestamp
+
+          - name: available_on
+            description: Date funds become available (settlement date)
+
+          - name: fee
+            description: Processing fee charged by payment processor (in cents)
+
+          - name: net
+            description: Net amount after fees (in cents)
+
+          - name: currency
+            description: Transaction currency code (usd, eur, gbp)
+
+          - name: type
+            description: Transaction type (charge, payment, refund, payment_refund)
+
+          - name: reporting_category
+            description: Categorization for reporting (charge, payment, declined, refund)
