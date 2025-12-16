@@ -4,24 +4,53 @@
 
 ---
 
-## Day 2 Session 3 (Dec 16, 2024) - Git Setup Complete
+## 🚀 UNIVERSAL RESUME PROMPT (Use This Every Time)
 
-### Quick Resume Prompt
+**Copy/paste this into any new Claude Code chat to resume your project:**
+
 ```
 Resuming checkout-analytics project (Checkout.com interview prep).
 
-Git is now configured:
-- Repository: github.com/bruddaondabeat/checkout-analytics (PRIVATE)
-- Branch: main
-- Initial commit pushed (15 files)
-- Identity: bruddaondabeat <bruddaondabeat@gmail.com>
-
-Read these files for full context:
-1. .claude/AGENT_CONTEXT.md (current state)
-2. README.md (project overview)
+IMPORTANT: Read these files FIRST to get full context:
+1. .claude/AGENT_CONTEXT.md (current state, completed tasks, next actions)
+2. README.md (project overview, coding standards)
 3. .claude/WORKFLOW.md (workflow guide)
 
-Ready to continue dbt work. Next: Add schema.yml with tests to staging models.
+After reading, tell me:
+- What tasks are completed
+- What's currently in progress
+- What should we work on next
+
+Then wait for my instructions.
+```
+
+---
+
+## Day 2 Session 3 (Dec 16, 2024) - Git Setup Complete
+
+### Session Summary
+**What we accomplished:**
+- Initialized Git repository
+- Created comprehensive .gitignore (dbt artifacts, Python, OS files)
+- Made initial commit with all project files (15 files)
+- Connected to GitHub at github.com/bruddaondabeat/checkout-analytics (PRIVATE)
+- Renamed master → main branch
+- Pushed to remote successfully
+- Updated AGENT_CONTEXT.md and CONVERSATION_BACKUPS.md
+- Learned Git concepts: identity, authentication, commit structure, branch naming
+
+**Git configuration:**
+- Identity: bruddaondabeat <bruddaondabeat@gmail.com>
+- Repository: github.com/bruddaondabeat/checkout-analytics
+- Branch: main
+- Commits: 2 (initial + docs update)
+
+### Quick Resume (If Starting New Chat)
+```
+Read .claude/AGENT_CONTEXT.md and continue from where we left off.
+
+Last completed: Git setup and initial commits
+Next task: Add schema.yml with dbt tests to staging models
 ```
 
 ### What We Just Completed (Git Setup)
