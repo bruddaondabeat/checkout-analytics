@@ -1,6 +1,6 @@
 # Agent Context (Read This First)
 
-**Last Updated:** 2024-12-16 07:55 by Claude Code
+**Last Updated:** 2024-12-16 09:30 by Claude Code
 **Project:** Checkout Americas Payment Analytics Stack
 
 ---
@@ -8,9 +8,9 @@
 ## 🎯 Current Sprint State
 
 **Day:** 2 of 7
-**Focus:** Building staging layer models (COMPLETE), moving to intermediate layer
+**Focus:** Intermediate layer models (2 of 5 complete)
 **Blocker:** None
-**Next Action:** Build intermediate models (authorization rates, decline analysis)
+**Next Action:** Build remaining intermediate models OR move to marts layer
 
 ---
 
@@ -29,6 +29,10 @@
 - [x] **Created `models/staging/stripe/schema.yml`** (11 tests: unique, not_null, accepted_values)
 - [x] **Ran `dbt test --select stg_stripe__transactions`** (11 of 11 tests PASSED ✅)
 - [x] **Validated transformations in Snowflake** (approval rate 81.95%, 150k rows confirmed)
+- [x] **Created `int_authorization_rates.sql`** (Metric #1 - auth rate by merchant/method/country/time)
+- [x] **Ran `dbt run --select int_authorization_rates`** (SUCCESS in 0.40s)
+- [x] **Created `int_decline_analysis.sql`** (Metric #2 - decline reason breakdown + revenue impact)
+- [x] **Ran `dbt run --select int_decline_analysis`** (SUCCESS in 0.51s)
 - [x] **Git repository initialized** (Dec 16, 2024)
 - [x] **Configured Git identity** (bruddaondabeat <bruddaondabeat@gmail.com>)
 - [x] **Created `.gitignore`** (excludes target/, logs/, dbt_packages/, .venv/, *.session.sql)
@@ -41,8 +45,7 @@
 
 ## 🔄 Active Tasks
 
-- [ ] Create intermediate model: `int_authorization_rates.sql` (Metric #1)
-- [ ] Create intermediate model: `int_decline_analysis.sql` (Metric #2)
+- [ ] Decide: Build remaining 3 intermediate models OR skip to marts layer for interview demo
 
 ---
 
@@ -174,9 +177,33 @@ None currently - all infrastructure is set up and ready
    - Approval rate: 81.95% (expected ~82% ✅)
    - Boolean logic verified (is_approved, is_refund working correctly)
 
-**Next steps:**
-- Build intermediate layer models (authorization rates, decline analysis)
-- These will reference `{{ ref('stg_stripe__transactions') }}` for lineage tracking
+**Intermediate Layer Progress (2 of 5 models complete):**
+
+4. **Created `int_authorization_rates.sql`:**
+   - Calculates auth rate % by merchant/payment_method/country/date
+   - Adds performance_tier flags (excellent/good/needs_improvement/critical)
+   - Includes revenue_at_risk_usd metric (how much $ are we losing?)
+   - Ran successfully: `dbt run --select int_authorization_rates` (0.40s)
+   - Validation queries added to session.sql
+
+5. **Created `int_decline_analysis.sql`:**
+   - Deep-dive on WHY transactions decline (by decline_reason)
+   - Categories: customer_issue vs fraud_system vs technical_validation
+   - Recoverability scoring (high/medium/low - where to focus optimization)
+   - potential_false_decline_flag for high-value fraud suspects
+   - Ran successfully: `dbt run --select int_decline_analysis` (0.51s)
+   - Validation queries added to session.sql
+
+**Next decision:**
+- Option A: Build remaining 3 intermediate models (false_decline_revenue_loss, chargeback_risk, transaction_success_funnel)
+- Option B: Skip to marts layer with existing 2 models (enough to demo architecture for interview)
+
+**Recommendation:** Option B - we have enough to show:
+1. Staging → Intermediate → Marts architecture
+2. CTE pattern mastery
+3. Business metrics (auth rate + decline analysis covers 80% of use cases)
+4. dbt lineage with ref()
+5. Data quality testing
 
 ---
 
