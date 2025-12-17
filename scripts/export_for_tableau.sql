@@ -26,8 +26,8 @@ SELECT
 
     -- Volume metrics
     total_transactions,
-    approved_transaction_count,
-    declined_transaction_count,
+    approved_transactions,
+    declined_transactions,
 
     -- Rate metrics (already in %)
     authorization_rate_pct,
@@ -43,11 +43,10 @@ SELECT
     fraud_system_revenue_loss_usd,
     technical_revenue_loss_usd,
 
-    -- Specific decline reasons (counts)
-    insufficient_funds_count,
-    fraud_suspected_count,
-    card_declined_count,
-    processing_error_count,
+    -- Recoverability metrics
+    high_recoverability_revenue_usd,
+    medium_recoverability_revenue_usd,
+    low_recoverability_revenue_usd,
 
     -- False decline metrics
     suspected_false_decline_count,
