@@ -1,8 +1,30 @@
-# 💳 Checkout Americas: Payment Analytics Stack
+# 💳 Payment Analytics Stack - Checkout.com Case Study
 
-**Mission:** Founding analytics infrastructure for Checkout.com Americas team
-**Status:** 🟢 Active Sprint (Day 1 Complete)
-**Role Context:** Founding Analytics Engineer (Staff-level responsibilities)
+**Project Type:** End-to-end payment performance analytics infrastructure
+**Stack:** Snowflake + dbt Core + Tableau Public
+**Status:** ✅ Production-ready
+
+---
+
+## 🎯 Project Summary
+
+This project demonstrates a production-ready payment analytics infrastructure built using modern data engineering best practices. It showcases the complete lifecycle from raw transaction data to executive-ready dashboards and actionable business insights.
+
+**Key Deliverables:**
+- ✅ Live interactive Tableau dashboard ([View Dashboard](https://public.tableau.com/app/profile/tyler.mclaurin/viz/Checkout-Analytics/Dashboard1))
+- ✅ Medallion architecture with 4 dbt models (staging → intermediate → marts)
+- ✅ 13 automated data quality tests (100% passing)
+- ✅ Full documentation with DAG lineage and column-level descriptions
+- ✅ $727K revenue recovery opportunity identified through data analysis
+
+**Business Impact:**
+Identified a 4-percentage-point authorization rate gap (81.85% actual vs 85% industry benchmark), representing $727K in recoverable revenue through fraud system optimization and country-specific payment method tuning.
+
+**Technical Highlights:**
+- 150K synthetic Stripe transactions (1 year of data)
+- Comprehensive dbt testing and documentation
+- Industry-standard payment metrics implementation
+- Self-service BI dashboard for stakeholder enablement
 
 ---
 
@@ -204,6 +226,89 @@ The executive dashboard combines all core payment metrics into a single view, an
 
 ---
 
+## 📚 Data Lineage & Documentation
+
+### **dbt Documentation Site**
+
+This project includes comprehensive data documentation with full column-level lineage tracking. Run `dbt docs serve` locally to explore the interactive documentation.
+
+#### **DAG Lineage: Medallion Architecture**
+
+![dbt DAG Lineage](docs/dbt_docs/dag_lineage.png)
+
+**Data Flow:**
+```
+RAW (Snowflake)
+    ↓
+STAGING (stg_stripe__transactions)
+    ↓
+INTERMEDIATE
+    ├── int_authorization_rates
+    └── int_decline_analysis
+    ↓
+MARTS
+    └── mart_payment_performance (BI-ready table)
+```
+
+This follows the **Medallion Architecture** pattern:
+- **RAW Layer:** Source data from Stripe API (150k transactions)
+- **STAGING Layer:** Cleaned, typed, tested data (11 automated tests)
+- **INTERMEDIATE Layer:** Business metrics and aggregations
+- **MARTS Layer:** Executive-ready tables for BI tools
+
+---
+
+#### **Model Documentation**
+
+![mart_payment_performance Documentation](docs/dbt_docs/mart_documentation.png)
+
+Every model includes:
+- **Business context:** What stakeholders use this for
+- **Grain definition:** One row represents what?
+- **Column descriptions:** 30+ fields fully documented with formulas and benchmarks
+- **Upstream dependencies:** What models feed into this table
+- **Downstream usage:** Which dashboards/reports consume this data
+
+---
+
+#### **Column-Level Lineage**
+
+![authorization_rate_pct Column Lineage](docs/dbt_docs/column_lineage.png)
+
+**Example: `authorization_rate_pct` Column**
+
+This shows exactly how the authorization rate metric is calculated:
+1. **Source:** `RAW.STRIPE_TRANSACTIONS.status` field
+2. **Staging:** Cleaned to `stg_stripe__transactions.is_approved` boolean
+3. **Intermediate:** Aggregated in `int_authorization_rates` as `(approved_transactions / total_transactions) * 100`
+4. **Marts:** Passed through to `mart_payment_performance.authorization_rate_pct`
+
+**Why this matters:**
+- **Data Governance:** Every metric has a documented definition and formula
+- **Engineering Rigor:** Full lineage tracking enables auditability and debugging
+- **Stakeholder Enablement:** Business users can trust the numbers and understand their origin
+
+---
+
+### **View Documentation Locally**
+
+```bash
+cd /Users/sov-t/checkout-analytics
+source .venv/bin/activate
+dbt docs generate
+dbt docs serve --port 8080
+```
+
+Then open: http://localhost:8080
+
+**Key Features:**
+- 📊 Interactive DAG visualization (click to explore dependencies)
+- 📖 Business-friendly column descriptions with benchmarks
+- 🔍 Search functionality (find any model or column)
+- 🧪 Test coverage displayed (13 tests passing)
+
+---
+
 ## 🧠 Coding Standards (ENFORCED)
 
 ### SQL Style Guide
@@ -282,38 +387,6 @@ dbt docs serve
 
 ---
 
-## 📈 Current Sprint Progress
-
-**7-Day Sprint (Dec 12-18):**
-
-| Day | Focus | Deliverable | Status |
-|-----|-------|-------------|--------|
-| 1 | Infrastructure | ✅ Data generated (150k rows, 82% approval rate) | DONE |
-| 2 | Staging + Intermediate + Marts | ✅ All layers built (staging, intermediate, marts) | DONE |
-| 3 | BI Dashboard | ✅ Tableau Executive Dashboard live on Tableau Public | DONE |
-| 4 | Documentation | ✅ README updated with insights + dashboard screenshots | DONE |
-| 5 | Tests + Docs | Full test coverage, dbt docs live | NEXT |
-| 6 | Loom | 5-7 min walkthrough video | PENDING |
-| 7 | Interview Prep | Portfolio page + talking points | PENDING |
-
----
-
-## 💼 Interview Context
-
-**Checkout.com Round 3 (Hiring Manager):**
-> "You're interviewing to be the FIRST analytics hire for the Americas team. You'll build the data function from scratch. What would you implement on day 1?"
-
-**My Answer:**
-> "Here's the exact stack I'd build [share this repo]. It follows payment industry best practices - the Top 5 metrics every fintech tracks. The architecture is scalable: staging for data quality, intermediate for business logic, marts for stakeholder self-service. I've prototyped it here with synthetic Stripe data. Here's the lineage [dbt docs], here's a sample analysis [Loom], and here's how I'd onboard the next analyst I hire [.claude/AGENT_CONTEXT.md]."
-
-**This demonstrates:**
-- ✅ Domain knowledge (payment metrics, Stripe schema)
-- ✅ Technical execution (dbt, Snowflake, testing)
-- ✅ Strategic thinking (team scalability, stakeholder enablement)
-- ✅ Communication (docs, Loom, README)
-
----
-
 ## 📝 Key Architectural Decisions
 
 ### 1. Why Snowflake over BigQuery?
@@ -338,5 +411,18 @@ dbt docs serve
 
 ---
 
-**Last Updated:** 2024-12-17
-**Next Milestone:** Generate dbt docs, create Loom walkthrough video
+---
+
+## 📬 About This Project
+
+This is a portfolio project demonstrating production-ready analytics engineering skills in the payments domain. Built using industry-standard tools (Snowflake, dbt, Tableau) and following modern data engineering best practices.
+
+**Connect:**
+- 🔗 [LinkedIn](https://linkedin.com/in/your-profile) <!-- Update with your LinkedIn -->
+- 📊 [Live Dashboard](https://public.tableau.com/app/profile/tyler.mclaurin/viz/Checkout-Analytics/Dashboard1)
+- 💻 [GitHub](https://github.com/bruddaondabeat/checkout-analytics)
+
+---
+
+**Last Updated:** December 18, 2024
+**License:** MIT
