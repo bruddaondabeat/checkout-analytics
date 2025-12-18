@@ -14,8 +14,8 @@ __pycache__/
 .DS_Store?
 ._*
 
-# IDE settings (optional - some teams commit .vscode/, some don't)
-# .vscode/
+# IDE settings - keep local only (may contain database connections)
+.vscode/
 
 # Environment variables (if you add any)
 .env
@@ -27,5 +27,5 @@ profiles.yml
 # Log files
 *.log
 
-# Private interview prep and agent context (keep local only)
+# Private prep and agent context (keep local only)
 .claude/
