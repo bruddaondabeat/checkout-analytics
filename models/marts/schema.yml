@@ -1,0 +1,244 @@
+version: 2
+
+models:
+  - name: mart_payment_performance
+    description: |
+      **Executive Payment Performance Dashboard Table**
+
+      This is the primary table for payment analytics and BI tool consumption. It combines
+      authorization rates, decline analysis, and recoverability scoring into a single
+      wide table optimized for Tableau/Looker dashboards.
+
+      **Grain:** One row per date + merchant + payment method + country combination
+
+      **Materialization:** TABLE (materialized for fast dashboard performance)
+
+      **Business Use Cases:**
+      - Executive dashboards showing overall auth rate trends
+      - Merchant health scorecards and segment analysis
+      - Revenue at risk analysis and recovery opportunity sizing
+      - Fraud system optimization (false decline identification)
+
+      **Key Stakeholders:**
+      - CFO: Revenue metrics and revenue at risk
+      - VP Product: Auth rate trends and UX opportunities
+      - Fraud Team: False decline analysis and ML model tuning
+      - Merchant Success: Per-merchant performance tracking
+
+      **Refresh Cadence:** Daily (via dbt Cloud job)
+
+    columns:
+      # Dimension Columns
+      - name: transaction_date
+        description: "Date of the transaction (YYYY-MM-DD). Primary time dimension for trend analysis."
+
+      - name: merchant_id
+        description: "Unique identifier for the merchant. Use this to drill down to specific merchant performance."
+
+      - name: merchant_tier
+        description: "Merchant classification (tier_1, tier_2, tier_3) based on transaction volume and revenue."
+
+      - name: payment_method
+        description: "Payment method used (bank_transfer, credit_card, digital_wallet). Key segmentation dimension."
+
+      - name: customer_country
+        description: "Two-letter country code of the customer (ISO 3166-1 alpha-2). Critical for geographic analysis."
+
+      # Time Period Rollups
+      - name: transaction_week
+        description: "Week start date (Monday). Use for weekly trend charts."
+
+      - name: transaction_month
+        description: "Month start date (1st of month). Use for monthly KPI reporting."
+
+      - name: transaction_quarter
+        description: "Quarter start date. Use for quarterly board reporting."
+
+      - name: transaction_year
+        description: "Year start date. Use for year-over-year comparisons."
+
+      # Volume Metrics
+      - name: total_transactions
+        description: "Total number of transactions (approved + declined) for this segment on this date."
+
+      - name: approved_transactions
+        description: "Number of transactions that were successfully approved."
+
+      - name: declined_transactions
+        description: "Number of transactions that were declined."
+
+      # Core KPIs
+      - name: authorization_rate_pct
+        description: |
+          **PRIMARY KPI: Authorization Rate Percentage**
+
+          Formula: (approved_transactions / total_transactions) * 100
+
+          Benchmark: 85%+ is considered competitive
+          - 85%+: Strong performance (Green zone)
+          - 80-84%: Acceptable but room for improvement (Yellow zone)
+          - <80%: Needs immediate attention (Red zone)
+
+          This is the most important metric for payment performance. A 1% improvement
+          in auth rate can translate to millions in recovered revenue for large merchants.
+
+      - name: decline_rate_pct
+        description: "Percentage of transactions declined. Inverse of authorization_rate_pct (decline_rate = 100 - auth_rate)."
+
+      - name: performance_tier
+        description: |
+          Categorical performance bucket based on authorization rate:
+          - 'strong': 85%+ auth rate (competitive benchmark)
+          - 'acceptable': 80-84% auth rate (room for improvement)
+          - 'needs_improvement': <80% auth rate (action required)
+
+      - name: volume_tier
+        description: |
+          Transaction volume classification for the segment:
+          - 'high_volume': 100+ transactions/day (statistically significant)
+          - 'medium_volume': 20-99 transactions/day (moderately reliable)
+          - 'low_volume': <20 transactions/day (may have noise)
+
+      # Revenue Metrics
+      - name: approved_revenue_usd
+        description: "Total USD revenue from approved transactions. This is realized revenue."
+
+      - name: revenue_at_risk_usd
+        description: |
+          **CRITICAL METRIC: Revenue at Risk**
+
+          Total USD value of declined transactions. This represents revenue that was
+          attempted but lost due to declines. Not all of this is recoverable (some
+          declines are legitimate fraud or insufficient funds), but a portion can be
+          recovered through optimization.
+
+          Use this in combination with recoverability metrics to size the opportunity.
+
+      - name: avg_approved_amount_usd
+        description: "Average transaction amount for approved transactions. Useful for understanding transaction size patterns."
+
+      - name: avg_declined_amount_usd
+        description: "Average transaction amount for declined transactions. Compare to avg_approved_amount to identify if high-value transactions are being declined disproportionately."
+
+      - name: total_potential_revenue_usd
+        description: "Sum of approved_revenue_usd + revenue_at_risk_usd. Represents total revenue opportunity if auth rate was 100%."
+
+      # Decline Analysis Metrics
+      - name: decline_analysis_transaction_count
+        description: "Number of declined transactions included in the decline analysis. Should match declined_transactions."
+
+      - name: decline_analysis_revenue_usd
+        description: "Total declined revenue analyzed. Should match revenue_at_risk_usd."
+
+      # Decline Category Breakdown
+      - name: customer_issue_revenue_loss_usd
+        description: |
+          Revenue lost due to customer-side issues (insufficient_funds, card_expired, etc.).
+
+          Recoverability: LOW (10-20%)
+
+          Recovery tactics: Retry logic, customer email notifications, payment method
+          update prompts in checkout flow.
+
+      - name: fraud_system_revenue_loss_usd
+        description: |
+          Revenue lost due to fraud system declines (suspected_fraud, fraud_detected).
+
+          Recoverability: HIGH (30-40%)
+
+          Recovery tactics: ML model tuning, manual review queue, step-up authentication
+          (3DS) instead of hard decline. This is often the HIGHEST ROI optimization area.
+
+      - name: technical_revenue_loss_usd
+        description: |
+          Revenue lost due to technical/validation issues (invalid_card_number,
+          processing_error, etc.).
+
+          Recoverability: MEDIUM (15-25%)
+
+          Recovery tactics: Enhanced validation on checkout form, better error messaging,
+          automatic retry with exponential backoff.
+
+      # Recoverability Scoring
+      - name: high_recoverability_revenue_usd
+        description: |
+          Revenue from declines with HIGH recovery potential (35% recoverable).
+
+          Includes: Fraud system false positives, automated risk threshold declines.
+
+          Action: Prioritize ML model tuning and manual review processes.
+
+      - name: medium_recoverability_revenue_usd
+        description: |
+          Revenue from declines with MEDIUM recovery potential (15% recoverable).
+
+          Includes: Technical errors, validation issues, some customer issues.
+
+          Action: Improve checkout UX, enhance error handling, implement retry logic.
+
+      - name: low_recoverability_revenue_usd
+        description: |
+          Revenue from declines with LOW recovery potential (5% recoverable).
+
+          Includes: Legitimate fraud, insufficient funds, do_not_honor from issuer.
+
+          Action: Accept as cost of doing business. Focus optimization elsewhere.
+
+      # False Decline Analysis
+      - name: suspected_false_decline_revenue_usd
+        description: |
+          **OPTIMIZATION OPPORTUNITY: Suspected False Declines**
+
+          Estimated revenue from transactions that were declined by fraud systems but
+          likely legitimate (based on customer_issue declines that look like fraud system
+          misclassifications).
+
+          This is the primary ML optimization opportunity. Reducing false positives by
+          30% can recover significant revenue with no increase in actual fraud.
+
+      - name: suspected_false_decline_count
+        description: "Number of transactions flagged as potential false declines. Use for sample size validation."
+
+      - name: false_decline_rate_pct
+        description: |
+          Percentage of declined revenue that's likely false positives.
+
+          Formula: (suspected_false_decline_revenue_usd / revenue_at_risk_usd) * 100
+
+          Benchmark: <10% is best-in-class. >20% indicates fraud model needs tuning.
+
+      # Calculated Opportunity Metrics
+      - name: estimated_recoverable_revenue_usd
+        description: |
+          **ROI SIZING METRIC: Estimated Recoverable Revenue**
+
+          Weighted calculation of realistic revenue recovery potential:
+
+          Formula:
+            (high_recoverability_revenue * 0.35) +
+            (medium_recoverability_revenue * 0.15) +
+            (low_recoverability_revenue * 0.05)
+
+          This represents the revenue you can realistically recover through optimization
+          efforts. Use this to prioritize which segments to focus on.
+
+          Example: If this metric = $50K/month for a segment, and optimization costs
+          $10K in eng time, that's 5:1 ROI - clear green light.
+
+      - name: segment_health_score
+        description: |
+          **COMPOSITE METRIC: Segment Health Score (0-100)**
+
+          Formula:
+            (auth_rate * 0.70) +
+            (false_decline_rate * 0.20) +
+            (volume_tier_bonus * 0.10)
+
+          Interpretation:
+          - 85+: Healthy (green)
+          - 75-84: Monitor (yellow)
+          - <75: Action required (red)
+
+          Use this for executive scorecards and alerting. It combines authorization
+          performance, fraud system accuracy, and statistical significance into a
+          single metric.

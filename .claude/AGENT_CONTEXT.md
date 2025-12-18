@@ -1,16 +1,16 @@
 # Agent Context (Read This First)
 
-**Last Updated:** 2024-12-16 10:45 by Claude Code
+**Last Updated:** 2024-12-17 23:30 by Claude Code
 **Project:** Checkout Americas Payment Analytics Stack
 
 ---
 
 ## 🎯 Current Sprint State
 
-**Day:** 2 of 7 COMPLETE ✅
-**Focus:** Core data models complete (Staging + Intermediate + Marts layers DONE)
+**Day:** 4 of 7 COMPLETE ✅
+**Focus:** Tableau Dashboard LIVE + README Documentation COMPLETE
 **Blocker:** None
-**Next Action:** BI Tool Integration + Documentation (see .claude/NEXT_AGENT_HANDOFF.md)
+**Next Action:** Testing + dbt Docs + Interview Prep (see .claude/CURRENT_STATE_HANDOFF.md)
 
 ---
 
@@ -45,7 +45,13 @@
 
 ## 🔄 Active Tasks
 
-- [ ] Decide: Build remaining 3 intermediate models OR skip to marts layer for interview demo
+- [x] ✅ Build all core models (staging + intermediate + marts) - DONE
+- [x] ✅ Create Tableau Executive Dashboard - DONE (live on Tableau Public)
+- [x] ✅ Update README with dashboard insights - DONE
+- [ ] ⏳ Generate dbt docs and take screenshots
+- [ ] ⏳ Run full test suite (`dbt test`)
+- [ ] 📌 Optional: Create Loom walkthrough video
+- [ ] 📌 Practice interview talking points
 
 ---
 
@@ -194,26 +200,49 @@ None currently - all infrastructure is set up and ready
    - Ran successfully: `dbt run --select int_decline_analysis` (0.51s)
    - Validation queries added to session.sql
 
-**Next decision:**
-- Option A: Build remaining 3 intermediate models (false_decline_revenue_loss, chargeback_risk, transaction_success_funnel)
-- Option B: Skip to marts layer with existing 2 models (enough to demo architecture for interview)
+**Decision Made:** ✅ Went with Option B - focused on core models + Tableau dashboard
 
-**Recommendation:** Option B - we have enough to show:
-1. Staging → Intermediate → Marts architecture
-2. CTE pattern mastery
-3. Business metrics (auth rate + decline analysis covers 80% of use cases)
-4. dbt lineage with ref()
-5. Data quality testing
+**What We Built (Days 3-4):**
+1. **Tableau Executive Dashboard** - Live on Tableau Public
+   - URL: https://public.tableau.com/app/profile/tyler.mclaurin/viz/Checkout-Analytics/Dashboard1
+   - 4 charts: KPIs, Auth Rate Trends, Problem Segments, Decline Category Breakdown
+   - Professional features: Benchmark lines, color gradients, interactive filters
+
+2. **Comprehensive README Documentation** - 130+ lines of business insights
+   - 3 key findings with actionable recommendations
+   - Stakeholder usage guide (CFO, VP Product, Fraud Team, Data Team)
+   - Technical implementation details
+
+3. **Key Business Metrics Identified:**
+   - Auth Rate: 81.85% (stable but 4pts below 85% benchmark)
+   - Revenue at Risk: $4.2M
+   - Recoverable Revenue: $727K (via fraud system optimization)
+   - Worst Segment: Spain digital wallet (74-76% auth rate)
+   - Best Segment: Netherlands bank transfer (85-87% auth rate)
 
 ---
 
 ## 📝 Notes for Next Agent
 
-- This is a NEW project, separate from the ML math learning work
-- All files are in `/Users/sov-t/checkout-analytics` (not ml-math-learning)
-- Data is generated and ready to load
-- Follow coding standards in README.md (CTE-only pattern)
-- This is for a FOUNDING TEAM interview - think architecture, not just execution
+**IMPORTANT:** Read `.claude/CURRENT_STATE_HANDOFF.md` FIRST - it has the complete current state and next steps.
+
+**Quick Context:**
+- Days 1-4 COMPLETE: Data models built, Tableau dashboard live, README documented
+- Days 5-7 REMAINING: Testing, dbt docs, interview prep
+- This is for a **founding analytics hire interview** - quality over quantity
+- All core functionality is done - remaining work is polish and preparation
+
+**Key Files to Review:**
+1. `.claude/CURRENT_STATE_HANDOFF.md` - Comprehensive handoff (read this first!)
+2. `README.md` - Updated with dashboard section and insights
+3. Tableau Dashboard: https://public.tableau.com/app/profile/tyler.mclaurin/viz/Checkout-Analytics/Dashboard1
+4. `models/marts/mart_payment_performance.sql` - The core dashboard table
+
+**What's Left:**
+- Generate dbt docs and take screenshots
+- Run `dbt test` to verify all 11 tests passing
+- Optional: Create Loom video walkthrough
+- Help user practice interview talking points
 
 ---
 

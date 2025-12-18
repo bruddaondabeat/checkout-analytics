@@ -23,3 +23,6 @@ profiles.yml
 
 # Snowflake session files (temporary query files)
 *.session.sql
+
+# Log files
+*.log

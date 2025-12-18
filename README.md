@@ -77,6 +77,133 @@ Based on Stripe API schema and fintech best practices:
 
 ---
 
+## 📊 Executive Dashboard & Key Insights
+
+### **Interactive Dashboard**
+🔗 **[View Live Dashboard on Tableau Public](https://public.tableau.com/app/profile/tyler.mclaurin/viz/Checkout-Analytics/Dashboard1)**
+
+![Payment Performance Dashboard](docs/screenshots/checkout_analytics_tableau_vizzie_sc.png)
+
+### **Dashboard Overview**
+
+The executive dashboard combines all core payment metrics into a single view, answering the key questions stakeholders ask daily:
+
+1. **What's our overall performance?** → Executive Summary (KPIs)
+2. **How are we trending?** → Authorization Rate Performance (6-month trends)
+3. **Where are the problems?** → Problem Segments Analysis (country × payment method)
+4. **What's causing declines?** → Decline Category Trends (revenue loss attribution)
+
+---
+
+### **Key Business Insights**
+
+#### **1. Overall Performance: Acceptable but Below Competitive Benchmark**
+
+**Current State:**
+- **Authorization Rate:** 81.85% (stable over 6 months)
+- **Decline Rate:** 18.15%
+- **Revenue at Risk:** $4.2M in declined transactions
+- **Recoverable Revenue:** $727K estimated through optimization
+
+**Analysis:** All merchant tiers are performing in the 80-82% range, which meets the industry minimum threshold (80%) but falls short of the competitive benchmark (85%+). This 4-percentage-point gap represents **significant revenue recovery opportunity**.
+
+**Actionable Recommendation:** Focus on the fraud system optimization path - fraud-related declines account for the largest portion of recoverable revenue and can be improved through ML model tuning without increasing fraud risk.
+
+---
+
+#### **2. Geographic & Payment Method Problem Areas**
+
+**Worst Performing Segments (sorted by authorization rate):**
+- **Spain (ES) - Digital Wallet:** 74-76% auth rate (deep red zone)
+- **Australia (AU) - Digital Wallet:** 75-77% auth rate
+- **Germany (DE) - Digital Wallet:** 76-78% auth rate
+
+**Best Performing Segments:**
+- **Netherlands (NL) - Bank Transfer:** 85-87% auth rate (green zone)
+- **United States (US) - Digital Wallet:** 84-86% auth rate
+
+**Analysis:** Digital wallets show high variance across geographies, suggesting country-specific fraud rules may be too aggressive in ES/AU/DE markets. Traditional payment methods (bank transfers, debit cards) consistently outperform in most markets.
+
+**Actionable Recommendation:**
+1. Audit fraud model thresholds for digital wallet transactions in ES, AU, DE
+2. Implement country-specific tuning rather than global ruleset
+3. A/B test relaxed fraud thresholds on low-risk digital wallet segments (e.g., repeat customers)
+
+---
+
+#### **3. Decline Revenue Attribution: Fraud System is the Biggest Opportunity**
+
+**Revenue Loss Breakdown (Monthly Average):**
+- **Customer Issues (Blue):** ~$150-200K/month
+  - *Examples:* Insufficient funds, expired cards, customer cancellations
+  - *Recoverability:* LOW - Outside merchant control
+
+- **Fraud System (Orange):** ~$80-100K/month
+  - *Examples:* Risk score triggers, velocity rules, suspicious behavior flags
+  - *Recoverability:* HIGH - False positive rate can be reduced 20-40% through ML tuning
+
+- **Technical Issues (Purple):** ~$40-70K/month
+  - *Examples:* Processing errors, network timeouts, invalid card data
+  - *Recoverability:* MEDIUM - Engineering fixes + retry logic
+
+**Trend Analysis:** Total decline revenue is **growing over time** (Dec 2024: ~$200K → Oct 2025: ~$400K), indicating either:
+- Business is scaling (transaction volume increasing) ✅ Good problem to have
+- Authorization rates are declining ⚠️ Needs immediate attention
+- New merchant segments with lower performance added 🔍 Requires investigation
+
+**Actionable Recommendation:**
+1. Calculate if growth in decline revenue is proportional to transaction volume growth
+2. If disproportionate → launch "Authorization Rate Recovery Sprint"
+3. Focus 80% of effort on fraud system optimization (highest ROI)
+4. Implement automated retry logic for technical failures (quick win)
+
+---
+
+### **How to Use This Dashboard**
+
+**For CFO / Finance Team:**
+- Monitor "Revenue at Risk" metric monthly
+- Track "Estimated Recoverable Revenue" to prioritize ML investments
+- Use "Decline Category Trends" to forecast potential revenue recovery from optimization efforts
+
+**For VP Product / Merchant Success:**
+- Filter "Problem Segments Analysis" by merchant tier to identify underperforming accounts
+- Use geographic breakdown to plan regional expansion strategies
+- Share segment-specific insights with merchant partners (e.g., "Your AU digital wallet auth rate is 10pts below benchmark")
+
+**For Fraud / Risk Team:**
+- Review "Fraud System Revenue Loss" monthly
+- Identify high-value transactions flagged as suspicious (potential false declines)
+- Use segment data to tune country-specific fraud models
+
+**For Data Team:**
+- Dashboard auto-refreshes with latest data from `MART_PAYMENT_PERFORMANCE` table
+- Filters are cross-chart interactive (click a merchant tier to filter all views)
+- Drill-down available: Click any segment to see daily granularity
+
+---
+
+### **Technical Implementation**
+
+**Data Source:**
+- Snowflake table: `ANALYTICS.STAGING_marts.MART_PAYMENT_PERFORMANCE`
+- Grain: Daily aggregations by merchant × payment method × country
+- Rows: 69,022 segments
+- Refresh: Daily via dbt Cloud (planned)
+
+**Dashboard Features:**
+- **Competitive Zone (85%+):** Green reference band shows target performance threshold
+- **Benchmark Line (85%):** Industry standard for "good" authorization rates
+- **Color Gradient:** Red = underperforming (74-80%), Green = strong (84-90%)
+- **Data Labels:** Exact percentages shown on auth rate trend for precision
+
+**Tools Used:**
+- Tableau Public Desktop (visualization)
+- dbt (data transformation)
+- Snowflake (data warehouse)
+
+---
+
 ## 🧠 Coding Standards (ENFORCED)
 
 ### SQL Style Guide
@@ -162,10 +289,10 @@ dbt docs serve
 | Day | Focus | Deliverable | Status |
 |-----|-------|-------------|--------|
 | 1 | Infrastructure | ✅ Data generated (150k rows, 82% approval rate) | DONE |
-| 2 | Staging Layer | stg_stripe__transactions + tests | NEXT |
-| 3 | Intermediate | Authorization + decline metrics | PENDING |
-| 4 | Marts | Executive dashboard models | PENDING |
-| 5 | Tests + Docs | Full test coverage, dbt docs live | PENDING |
+| 2 | Staging + Intermediate + Marts | ✅ All layers built (staging, intermediate, marts) | DONE |
+| 3 | BI Dashboard | ✅ Tableau Executive Dashboard live on Tableau Public | DONE |
+| 4 | Documentation | ✅ README updated with insights + dashboard screenshots | DONE |
+| 5 | Tests + Docs | Full test coverage, dbt docs live | NEXT |
 | 6 | Loom | 5-7 min walkthrough video | PENDING |
 | 7 | Interview Prep | Portfolio page + talking points | PENDING |
 
@@ -211,5 +338,5 @@ dbt docs serve
 
 ---
 
-**Last Updated:** 2024-12-12
-**Next Milestone:** Load data to Snowflake, begin staging layer
+**Last Updated:** 2024-12-17
+**Next Milestone:** Generate dbt docs, create Loom walkthrough video

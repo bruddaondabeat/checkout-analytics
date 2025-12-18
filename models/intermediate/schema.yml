@@ -1,0 +1,183 @@
+version: 2
+
+models:
+  - name: int_authorization_rates
+    description: |
+      **Authorization Rate Analysis - Core Payment Performance Metrics**
+
+      This intermediate model calculates authorization rates (% of transactions approved)
+      segmented by merchant, payment method, and geography. Authorization rate is the
+      PRIMARY metric for payment performance - every 1% improvement can translate to
+      millions in recovered revenue for large merchants.
+
+      **Grain:** One row per date + merchant + payment method + country combination (daily)
+
+      **Data Quality:** Excludes refund transactions (not part of authorization decision flow)
+
+      **Business Context:**
+      - Benchmark: 85%+ is considered competitive authorization performance
+      - Checkout.com's Intelligent Acceptance product aims to improve this metric
+      - Used by Payment Success team to identify optimization opportunities
+
+      **Downstream Usage:**
+      - Feeds into `mart_payment_performance` for BI dashboards
+      - Used for merchant health scoring and benchmarking
+      - Powers geographic and payment method segmentation analysis
+
+    columns:
+      - name: transaction_date
+        description: "Date of transactions (daily grain). Use for time-series trend analysis."
+
+      - name: merchant_id
+        description: "Unique merchant identifier. Key dimension for merchant-specific analysis."
+
+      - name: merchant_tier
+        description: "Merchant classification (tier_1, tier_2, tier_3) based on volume/revenue."
+
+      - name: payment_method
+        description: "Payment method used (bank_transfer, credit_card, digital_wallet)."
+
+      - name: customer_country
+        description: "Customer country code (ISO 3166-1 alpha-2). Critical for geographic analysis."
+
+      - name: total_transactions
+        description: "Total transaction count (approved + declined). Excludes refunds."
+
+      - name: approved_transactions
+        description: "Number of transactions successfully approved by issuing bank."
+
+      - name: declined_transactions
+        description: "Number of transactions declined by issuing bank or fraud system."
+
+      - name: authorization_rate_pct
+        description: |
+          **PRIMARY KPI: Authorization Rate Percentage**
+
+          Formula: (approved_transactions / total_transactions) * 100
+
+          This is the most important payment performance metric. Represents the percentage
+          of transactions that successfully complete the authorization flow.
+
+          Benchmarks:
+          - 85%+: Competitive/Strong
+          - 80-84%: Acceptable but room for improvement
+          - <80%: Needs immediate attention
+
+      - name: decline_rate_pct
+        description: "Inverse of authorization rate. Formula: (declined_transactions / total_transactions) * 100"
+
+      - name: approved_revenue_usd
+        description: "Total USD revenue from approved transactions."
+
+      - name: declined_revenue_usd
+        description: "Total USD value of declined transactions (revenue at risk)."
+
+      - name: revenue_at_risk_usd
+        description: "Alias for declined_revenue_usd. Represents potential revenue lost to declines."
+
+      - name: avg_approved_amount_usd
+        description: "Average transaction amount for approved transactions."
+
+      - name: avg_declined_amount_usd
+        description: "Average transaction amount for declined transactions. Compare to avg_approved_amount to identify if high-value transactions are being declined disproportionately."
+
+      - name: performance_tier
+        description: |
+          Categorical performance classification:
+          - 'excellent': 95%+ auth rate
+          - 'good': 85-94% auth rate
+          - 'needs_improvement': 75-84% auth rate
+          - 'critical': <75% auth rate
+
+      - name: volume_tier
+        description: |
+          Transaction volume classification for statistical significance:
+          - 'high_volume': 1000+ transactions
+          - 'medium_volume': 100-999 transactions
+          - 'low_volume': <100 transactions
+
+          Low-volume segments may have more volatile auth rates.
+
+  - name: int_decline_analysis
+    description: |
+      **Decline Root Cause Analysis & Recoverability Scoring**
+
+      This model categorizes declined transactions by reason and assigns recoverability
+      scores to help prioritize optimization efforts. Not all declines are equal - some
+      can be recovered through ML tuning (fraud false positives), while others are
+      legitimate (insufficient funds).
+
+      **Grain:** One row per date + merchant + payment method + country + decline reason
+
+      **Key Innovation:** Recoverability scoring framework
+      - HIGH (35% recoverable): Fraud system false positives
+      - MEDIUM (15% recoverable): Technical errors, validation issues
+      - LOW (5% recoverable): Legitimate fraud, insufficient funds
+
+      **Business Value:**
+      - Sizes the revenue recovery opportunity (ROI for optimization projects)
+      - Identifies which decline types to prioritize (fraud system tuning = highest ROI)
+      - Flags potential false declines for ML model retraining
+
+      **Downstream Usage:**
+      - Feeds into `mart_payment_performance` decline category columns
+      - Powers "Problem Segments" analysis in Tableau dashboard
+      - Used for fraud model evaluation and tuning
+
+    columns:
+      - name: transaction_date
+        description: "Date of transactions (daily grain)."
+
+      - name: merchant_id
+        description: "Unique merchant identifier."
+
+      - name: merchant_tier
+        description: "Merchant classification (tier_1, tier_2, tier_3)."
+
+      - name: payment_method
+        description: "Payment method used (bank_transfer, credit_card, digital_wallet)."
+
+      - name: customer_country
+        description: "Customer country code (ISO 3166-1 alpha-2)."
+
+      - name: decline_reason
+        description: |
+          Specific reason code for the decline. Examples:
+          - 'insufficient_funds': Customer account has insufficient balance
+          - 'suspected_fraud': Blocked by fraud detection system
+          - 'invalid_card_number': Validation error on card number
+          - 'do_not_honor': Issuing bank declined without specific reason
+
+      - name: decline_category
+        description: |
+          High-level categorization of decline reasons:
+          - 'customer_issue': Problems on customer side (insufficient funds, expired card)
+          - 'fraud_system': Blocked by fraud detection (suspected_fraud, fraud_detected)
+          - 'technical_validation': Technical/validation errors (invalid card, processing error)
+
+      - name: declined_transaction_count
+        description: "Number of transactions declined with this specific decline_reason."
+
+      - name: declined_revenue_usd
+        description: "Total USD value of declined transactions for this decline_reason."
+
+      - name: recoverability_potential
+        description: |
+          Recoverability classification based on decline category:
+          - 'high': 35% of revenue can be recovered (fraud system false positives)
+          - 'medium': 15% of revenue can be recovered (technical errors, UX improvements)
+          - 'low': 5% of revenue can be recovered (legitimate declines)
+
+          Use this to prioritize optimization efforts. Always start with 'high' recoverability segments.
+
+      - name: potential_false_decline_flag
+        description: |
+          Boolean flag indicating suspected false decline (legitimate transaction
+          incorrectly blocked by fraud system).
+
+          Logic: TRUE if decline_category = 'fraud_system'
+
+          Use this to:
+          - Size ML model tuning opportunity
+          - Create training data for fraud model improvements
+          - Identify high-value false positive cases for manual review
