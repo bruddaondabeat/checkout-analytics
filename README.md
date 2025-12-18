@@ -80,20 +80,27 @@ Based on Stripe API schema and fintech best practices:
 
 ### Staging Layer (`models/staging/`)
 **Purpose:** Clean, rename, cast raw data
-- `stg_stripe__transactions.sql` - One row per transaction, standardized columns
-- `stg_stripe__merchants.sql` - Merchant dimension (tier, attributes)
+- ✅ `stg_stripe__transactions.sql` - One row per transaction, standardized columns
 
 ### Intermediate Layer (`models/intermediate/`)
 **Purpose:** Calculate business metrics
-- `int_authorization_rates.sql` - Auth rate by merchant/method/country
-- `int_decline_analysis.sql` - Decline reason breakdown + trends
+
+*Implemented (80/20 principle - focus on core metrics):*
+- ✅ `int_authorization_rates.sql` - Auth rate by merchant/method/country
+- ✅ `int_decline_analysis.sql` - Decline reason breakdown + trends
+
+*Planned for future expansion:*
 - `int_false_decline_revenue_loss.sql` - Revenue impact calculation
 - `int_chargeback_risk.sql` - Chargeback patterns + indicators
 - `int_transaction_success_funnel.sql` - Auth → settlement funnel
 
 ### Marts Layer (`models/marts/`)
 **Purpose:** Stakeholder-ready datasets for BI tools
-- `mart_payment_performance.sql` - Executive dashboard (all 5 metrics)
+
+*Implemented:*
+- ✅ `mart_payment_performance.sql` - Executive dashboard combining auth rates and decline analysis
+
+*Planned for future expansion:*
 - `mart_merchant_health.sql` - Per-merchant scorecard
 - `mart_fraud_vs_acceptance.sql` - Trade-off analysis tool
 
@@ -404,10 +411,11 @@ dbt docs serve
 - **Reasoning:** Realistic schema, full control, no PII concerns
 - **Trade-off:** Not "real" but proves architectural competence
 
-### 4. Why Top 5 metrics only?
-- **Decision:** Focus on core payment KPIs
-- **Reasoning:** 80/20 rule - these drive 90% of merchant ROI
-- **Trade-off:** Could add more, but better to nail the fundamentals
+### 4. Why focus on authorization rate and decline analysis first?
+- **Decision:** Implement core payment KPIs first (80/20 principle)
+- **Reasoning:** Authorization rate and decline analysis drive 80% of merchant ROI. Better to deliver production-ready core metrics than incomplete coverage of all 5 planned metrics
+- **Implementation:** Built 2 intermediate models (auth rates, decline analysis) that power the executive dashboard
+- **Future expansion:** Remaining 3 metrics (false decline rate, chargeback rate, transaction success funnel) can be added incrementally
 
 ---
 
@@ -418,7 +426,7 @@ dbt docs serve
 This is a portfolio project demonstrating production-ready analytics engineering skills in the payments domain. Built using industry-standard tools (Snowflake, dbt, Tableau) and following modern data engineering best practices.
 
 **Connect:**
-- 🔗 [LinkedIn](https://linkedin.com/in/your-profile) <!-- Update with your LinkedIn -->
+- 🔗 [LinkedIn](https://www.linkedin.com/in/tyler-mclaurin-903190356)
 - 📊 [Live Dashboard](https://public.tableau.com/app/profile/tyler.mclaurin/viz/Checkout-Analytics/Dashboard1)
 - 💻 [GitHub](https://github.com/bruddaondabeat/checkout-analytics)
 
